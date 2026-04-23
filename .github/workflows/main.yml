@@ -1,0 +1,41 @@
+name: App CI - DEV
+
+on:
+  push:
+    branches:
+      - dev
+
+  pull_request:
+    branches:
+      - main
+      - dev
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  node-ci:
+    uses: singpost/singpost-cicd-components/.github/workflows/reusable-node-ci.yml@v1
+    with:
+      node_version: "22"
+      working_directory: "."
+      install_command: "npm ci"
+      test_command: "npm test"
+      build_command: "npm run build"
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  sonarqube:
+    uses: singpost/singpost-cicd-components/.github/workflows/reusable-sonarqube.yml@v1
+    with:
+      project_key: singpost_logisticsplatform_apptracking
+      project_base_dir: .
+      extra_args: >
+        -Dsonar.sources=src
+        -Dsonar.tests=test
+        -Dsonar.test.inclusions=test/**/*.js
+        -Dsonar.exclusions=**/node_modules/**,**/coverage/**
+    secrets: inherit
