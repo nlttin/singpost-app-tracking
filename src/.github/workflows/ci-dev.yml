@@ -38,6 +38,4 @@ jobs:
         -Dsonar.tests=test
         -Dsonar.test.inclusions=test/**/*.js
         -Dsonar.exclusions=**/node_modules/**,**/coverage/**
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    secrets: inherit
