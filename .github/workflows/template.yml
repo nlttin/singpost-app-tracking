@@ -13,7 +13,7 @@ jobs:
   # PARALLEL STAGE 1: FAST CHECKS
   # ==========================================
   gitleaks-scan:
-    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@main
+    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
       scan_mode: full
       fail-on-detection: false
