@@ -37,21 +37,18 @@ jobs:
 
  #dependency-review:
  #  needs: checkout-code
- #  uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-dependency-review.yml
+ #  uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-dependency-review.yml@dev
  #  with:
  #    config-file: './.github/dependency-review-config.yml'
 
       
   #sonar-scan:
   #  needs: checkout-code
-  #  uses: ./.github/workflows/workflow-sonarqube.yml
+  #  uses: ./.github/workflows/workflow-sonarqube.yml@dev 
   #  with:
   #    PROJECTID: 'singpost-cicd-components'
   #    config-path: '.'
   #  secrets: inherit
-  #  #secrets:
-  #  #  SONAR_TOKEN: "ZXCVBNMASDFGHJKL1234567890"
-  #  #  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   gitleaks-scan:
     needs: checkout-code
