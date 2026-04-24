@@ -1,8 +1,9 @@
-name: App CI - DEV
+name: App CI - PR
 
 on:
-  push:
+  pull_request:
     branches:
+      - main
       - dev
   workflow_dispatch:
 
@@ -22,14 +23,12 @@ jobs:
     secrets:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-dependency-review.yml@dev
+
   sonarqube-disabled:
     runs-on: ubuntu-latest
     steps:
       - name: SonarQube status
         run: echo "SonarQube is temporarily disabled in this repository."
-
-  gke-deploy-disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - name: GKE deploy status
-        run: echo "GKE deploy workflow exists but is not part of the daily DEV pipeline yet."
