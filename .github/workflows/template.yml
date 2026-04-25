@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Mocking CodeQL & SonarQube"
-      - run: echo "Mocking Checkov"
+  #    - run: echo "Mocking Checkov"
 
   # ==========================================
   # PARALLEL STAGE 3: BUILD & DB MIGRATION
