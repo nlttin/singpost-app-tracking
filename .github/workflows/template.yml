@@ -43,7 +43,7 @@ jobs:
     needs: [gitleaks-scan, app-ci-test]
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Mocking CodeQL & SonarQube"
+      - run: echo "Mocking CodeQL"
   #    - run: echo "Mocking Checkov"
 
   # ==========================================
