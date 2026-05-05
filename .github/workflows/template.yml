@@ -1,0 +1,56 @@
+name: Standard CI/CD Pipeline (TEST)
+
+on:
+  push:
+    branches:
+      - dev
+      - feat/gitleaks-integration-test
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ==========================================
+  # STAGE 1: GITLEAKS
+  # ==========================================
+  gitleaks-scan:
+    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
+    with:
+      scan_mode: full
+      config-ref: dev              
+      fail-on-detection: false    
+    secrets: inherit               
+
+  # ==========================================
+  # STAGE 2: BASIC CI TEST
+  # ==========================================
+  app-ci-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fake CI step
+        run: |
+          echo "Running basic CI test..."
+          echo "Everything is OK"
+
+  # ==========================================
+  # STAGE 3: SECURITY (MOCK)
+  # ==========================================
+  security-scans:
+    needs: [gitleaks-scan, app-ci-test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Mock security scan passed"
+
+  # ==========================================
+  # FINAL: RESULT
+  # ==========================================
+  summary:
+    if: always()
+    needs: [security-scans]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Pipeline finished"
