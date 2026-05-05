@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev
-      - feat/gitleaks-integration-test
+      - feature/gitleaks-integration-test
   pull_request:
 
 permissions:
