@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  actions: read
 
 jobs:
   # ==========================================
@@ -43,18 +44,19 @@ jobs:
   # ==========================================
   # STAGE 2: SECURITY SCANS
   # ==========================================
-  security-scans:
+  codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking CodeQL"
-  #    - run: echo "Mocking Checkov"
+    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@dev
+    with:
+      language: 'javascript-typescript'
+      build-mode: 'none'
+      queries: 'security-extended'
 
   # ==========================================
   # PARALLEL STAGE 3: BUILD & DB MIGRATION
   # ==========================================
   build-and-push:
-    needs: security-scans
+    needs: codeql-scan
     runs-on: ubuntu-latest
     steps:
       - run: echo "Mocking Docker build"
@@ -62,7 +64,7 @@ jobs:
       - run: echo "Mocking Container Analysis"
 
   database-migration:
-    needs: security-scans
+    needs: codeql-scan
     runs-on: ubuntu-latest
     steps:
       - run: echo "Mocking Flyway migration"
