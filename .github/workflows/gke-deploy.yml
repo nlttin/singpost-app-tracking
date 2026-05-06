@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   gke-deploy:
-    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-gke-deploy.yml@dev
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-gke-deploy.yml@main
     with:
       delivery_pipeline: "trackingingestapi-gke-pipeline"
       target_name: "dev-gke"
