@@ -13,16 +13,6 @@ permissions:
 
 jobs:
   # ==========================================
-  # STAGE 1: GITLEAKS
-  pull_request:
-    branches:
-      - main
-      - dev
-permissions:
-  contents: read
-  security-events: write
-jobs:
-  # ==========================================
   # PARALLEL STAGE 1: FAST CHECKS
   # ==========================================
   gitleaks-scan:
