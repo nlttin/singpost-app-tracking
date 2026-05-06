@@ -49,6 +49,7 @@ jobs:
       language: 'javascript-typescript'
       build-mode: 'none'
       queries: 'security-extended'
+      fail-on-severity: 'error'
 
   # ==========================================
   # PARALLEL STAGE 3: BUILD & DB MIGRATION
