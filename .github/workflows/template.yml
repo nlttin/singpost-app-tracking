@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - dev
+      - feature/gitleaks-integration-test
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ==========================================
+  # STAGE 1: GITLEAKS
   pull_request:
     branches:
       - main
@@ -19,9 +29,13 @@ jobs:
     uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
       scan_mode: full
-      fail-on-detection: false
-    secrets: inherit
+      config-ref: dev              
+      fail-on-detection: true    
+    secrets: inherit               
 
+  # ==========================================
+  # STAGE 2: BASIC CI TEST
+  # ==========================================
   app-ci-test:
     runs-on: ubuntu-latest
     steps:
