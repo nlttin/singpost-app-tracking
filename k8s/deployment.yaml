@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trackingingestapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trackingingestapi
+  template:
+    metadata:
+      labels:
+        app: trackingingestapi
+    spec:
+      containers:
+        - name: trackingingestapi
+          image: ghcr.io/singapore-post-limited/singpost-app-dsb-trackingingestapi:latest
+          ports:
+            - containerPort: 3000

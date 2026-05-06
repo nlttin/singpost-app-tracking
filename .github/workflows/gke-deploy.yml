@@ -1,0 +1,19 @@
+name: App GKE Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gke-deploy:
+    uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-gke-deploy.yml@dev
+    with:
+      delivery_pipeline: "trackingingestapi-gke-pipeline"
+      target_name: "dev-gke"
+      release_name: "manual-${{ github.run_number }}"
+      image_ref: "ghcr.io/singapore-post-limited/singpost-app-dsb-trackingingestapi:${{ github.sha }}"
+      skaffold_file: "skaffold.yaml"
+      clouddeploy_file: "clouddeploy/clouddeploy.yaml"
+      working_directory: "."

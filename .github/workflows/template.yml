@@ -1,4 +1,4 @@
-name: Standard CI/CD Pipeline (TEST)
+name: Standard CI/CD Pipeline
 
 on:
   push:
@@ -14,6 +14,16 @@ permissions:
 jobs:
   # ==========================================
   # STAGE 1: GITLEAKS
+  pull_request:
+    branches:
+      - main
+      - dev
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  # ==========================================
+  # PARALLEL STAGE 1: FAST CHECKS
   # ==========================================
   gitleaks-scan:
     uses: SINGAPORE-POST-LIMITED/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
@@ -30,27 +40,72 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Fake CI step
-        run: |
-          echo "Running basic CI test..."
-          echo "Everything is OK"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - run: |
+          echo "npm install..."
+          npm install || true
+          echo "npm test..."
+          npm test --if-present
 
   # ==========================================
-  # STAGE 3: SECURITY (MOCK)
+  # STAGE 2: SECURITY SCANS
   # ==========================================
   security-scans:
     needs: [gitleaks-scan, app-ci-test]
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Mock security scan passed"
+      - run: echo "Mocking CodeQL"
+  #    - run: echo "Mocking Checkov"
 
   # ==========================================
-  # FINAL: RESULT
+  # PARALLEL STAGE 3: BUILD & DB MIGRATION
   # ==========================================
-  summary:
-    if: always()
-    needs: [security-scans]
+  build-and-push:
+    needs: security-scans
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Pipeline finished"
+      - run: echo "Mocking Docker build"
+      - run: echo "Mocking GAR push"
+      - run: echo "Mocking Container Analysis"
+
+  database-migration:
+    needs: security-scans
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Mocking Flyway migration"
+
+  # ==========================================
+  # STAGE 4: DEPLOYMENTS
+  # ==========================================
+  deploy-dev:
+    needs: [build-and-push, database-migration]
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - run: echo "Mocking Terraform DEV"
+      - run: echo "Mocking Apigee DEV"
+      - run: echo "Mocking Cloud Deploy GKE DEV"
+
+  deploy-prod:
+    needs: [build-and-push, database-migration]
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: echo "Mocking Terraform PROD"
+      - run: echo "Mocking Apigee PROD"
+      - run: echo "Mocking Cloud Deploy GKE PROD"
+
+  # ==========================================
+  # STAGE 5: NOTIFY
+  # ==========================================
+  notify:
+    if: always()
+    needs: [deploy-dev, deploy-prod]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Mocking GChat Webhook"
