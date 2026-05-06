@@ -17,8 +17,9 @@ jobs:
   # PARALLEL STAGE 1: FAST CHECKS
   # ==========================================
   gitleaks-scan:
+    runs-on: ubuntu-latest
     steps:
-      - run: echo "Gitleak mock"
+      - run: echo "mocking gitleaks scan"         
 
   # ==========================================
   # STAGE 2: BASIC CI TEST
@@ -42,7 +43,7 @@ jobs:
   # ==========================================
   codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@dev
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@main
     with:
       language: 'javascript-typescript'
       build-mode: 'none'
