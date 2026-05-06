@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   node-ci:
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-node-ci.yml@dev
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-node-ci.yml@main
     with:
       node_version: "22"
       working_directory: "."
@@ -25,7 +25,7 @@ jobs:
 
   dependency-review:
     if: github.event_name == 'pull_request'
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-dependency-review.yml@dev
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-dependency-review.yml@main
 
   sonarqube-disabled:
     runs-on: ubuntu-latest
