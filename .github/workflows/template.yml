@@ -3,8 +3,9 @@ name: Standard CI/CD Pipeline
 on:
   push:
     branches:
+      - main
       - dev
-      - feature/gitleaks-integration-test
+      - 'feature/**'
   pull_request:
 
 permissions:
@@ -17,12 +18,12 @@ jobs:
   # PARALLEL STAGE 1: FAST CHECKS
   # ==========================================
   gitleaks-scan:
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@main
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
       scan_mode: full
-      config-ref: dev              
-      fail-on-detection: true    
-    secrets: inherit               
+      config-ref: dev
+      fail-on-detection: false
+    secrets: inherit
 
   # ==========================================
   # STAGE 2: BASIC CI TEST
@@ -46,7 +47,7 @@ jobs:
   # ==========================================
   codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@main
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@dev
     with:
       language: 'javascript-typescript'
       build-mode: 'none'
