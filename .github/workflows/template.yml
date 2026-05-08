@@ -43,7 +43,7 @@ jobs:
           npm test --if-present
 
   # ==========================================
-  # STAGE 2: SECURITY SCANS
+  # STAGE 3: SECURITY SCANS
   # ==========================================
   codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
@@ -54,16 +54,8 @@ jobs:
       queries: 'security-extended'
 
   # ==========================================
-  # PARALLEL STAGE 3: BUILD & DB MIGRATION
+  # STAGE 4: DB MIGRATION (placeholder)
   # ==========================================
-  build-and-push:
-    needs: codeql-scan
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Docker build"
-      - run: echo "Mocking GAR push"
-      - run: echo "Mocking Container Analysis"
-
   database-migration:
     needs: codeql-scan
     runs-on: ubuntu-latest
@@ -71,30 +63,24 @@ jobs:
       - run: echo "Mocking Flyway migration"
 
   # ==========================================
-  # STAGE 4: DEPLOYMENTS
+  # STAGE 5: DEPLOYMENTS
   # ==========================================
   deploy-dev:
-    needs: [build-and-push, database-migration]
+    needs: database-migration
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
-    environment: development
     steps:
-      - run: echo "Mocking Terraform DEV"
-      - run: echo "Mocking Apigee DEV"
       - run: echo "Mocking Cloud Deploy GKE DEV"
 
   deploy-prod:
-    needs: [build-and-push, database-migration]
+    needs: database-migration
     if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - run: echo "Mocking Terraform PROD"
-      - run: echo "Mocking Apigee PROD"
       - run: echo "Mocking Cloud Deploy GKE PROD"
 
   # ==========================================
-  # STAGE 5: NOTIFY
+  # STAGE 6: NOTIFY
   # ==========================================
   notify:
     if: always()
