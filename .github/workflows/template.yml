@@ -7,6 +7,10 @@ on:
       - dev
       - 'feature/**'
   pull_request:
+    branches:
+      - main
+      - dev
+      - 'feature/**'
 
 permissions:
   contents: read
@@ -27,25 +31,20 @@ jobs:
       fail-on-detection: false
     secrets: inherit
 
-  # ==========================================
-  # STAGE 2: BASIC CI TEST
-  # ==========================================
   app-ci-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
       - run: |
-          echo "npm install..."
           npm install || true
-          echo "npm test..."
           npm test --if-present
 
   # ==========================================
-  # STAGE 3: SECURITY SCANS
+  # STAGE 2: SECURITY SCANS
   # ==========================================
   codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
@@ -56,7 +55,7 @@ jobs:
       queries: 'security-extended'
 
   # ==========================================
-  # STAGE 4: DOCKER BUILD
+  # STAGE 3: DOCKER BUILD
   # ==========================================
   build-and-push:
     needs: codeql-scan
@@ -75,7 +74,7 @@ jobs:
       - run: echo "Mocking Flyway migration"
 
   # ==========================================
-  # STAGE 5: DEPLOYMENTS
+  # STAGE 4: DEPLOYMENTS
   # ==========================================
   deploy-dev:
     needs: [build-and-push, database-migration]
@@ -92,7 +91,7 @@ jobs:
       - run: echo "Mocking Cloud Deploy GKE PROD"
 
   # ==========================================
-  # STAGE 6: NOTIFY
+  # STAGE 5: NOTIFY
   # ==========================================
   notify:
     if: always()
