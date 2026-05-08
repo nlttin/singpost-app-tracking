@@ -12,6 +12,8 @@ permissions:
   contents: read
   security-events: write
   actions: read
+  id-token: write
+  packages: write
 
 jobs:
   # ==========================================
@@ -54,8 +56,18 @@ jobs:
       queries: 'security-extended'
 
   # ==========================================
-  # STAGE 4: DB MIGRATION (placeholder)
+  # STAGE 4: DOCKER BUILD
   # ==========================================
+  build-and-push:
+    needs: codeql-scan
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-docker-build.yml@dev
+    with:
+      image-name: 'singpost-app-tracking'
+      dockerfile: 'Dockerfile'
+      context: '.'
+      push: false
+    secrets: inherit
+
   database-migration:
     needs: codeql-scan
     runs-on: ubuntu-latest
@@ -66,14 +78,14 @@ jobs:
   # STAGE 5: DEPLOYMENTS
   # ==========================================
   deploy-dev:
-    needs: database-migration
+    needs: [build-and-push, database-migration]
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - run: echo "Mocking Cloud Deploy GKE DEV"
 
   deploy-prod:
-    needs: database-migration
+    needs: [build-and-push, database-migration]
     if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
