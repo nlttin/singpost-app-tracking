@@ -65,7 +65,7 @@ jobs:
       image-name: 'singpost-app-tracking'
       dockerfile: 'Dockerfile'
       context: '.'
-      push: false
+      push: true
     secrets: inherit
 
   database-migration:
