@@ -55,7 +55,7 @@ jobs:
       queries: 'security-extended'
 
   # ==========================================
-  # STAGE 3: DOCKER BUILD
+  # STAGE 3: DOCKER BUILD (GHCR)
   # ==========================================
   build-and-push:
     needs: codeql-scan
@@ -74,21 +74,39 @@ jobs:
       - run: echo "Mocking Flyway migration"
 
   # ==========================================
-  # STAGE 4: DEPLOYMENTS
+  # STAGE 4: DEPLOYMENTS (Cloud Build + Cloud Run)
   # ==========================================
   deploy-dev:
     needs: [build-and-push, database-migration]
     if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Cloud Deploy GKE DEV"
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-cloud-run-deploy.yml@feature/gcp-cloud-run
+    with:
+      service-name: 'singpost-app-tracking-dev'
+      image-name: 'singpost-app-tracking'
+      project-id: ${{ vars.GCP_PROJECT_ID }}
+      region: 'asia-southeast1'
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      deployer-sa: ${{ secrets.GCP_DEPLOYER_SA }}
+      runtime-sa: ${{ secrets.GCP_RUNTIME_SA }}
+      min-instances: 0
+      max-instances: 10
+    secrets: inherit
 
   deploy-prod:
     needs: [build-and-push, database-migration]
     if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Cloud Deploy GKE PROD"
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-cloud-run-deploy.yml@feature/gcp-cloud-run
+    with:
+      service-name: 'singpost-app-tracking-prod'
+      image-name: 'singpost-app-tracking'
+      project-id: ${{ vars.GCP_PROJECT_ID }}
+      region: 'asia-southeast1'
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      deployer-sa: ${{ secrets.GCP_DEPLOYER_SA }}
+      runtime-sa: ${{ secrets.GCP_RUNTIME_SA }}
+      min-instances: 1
+      max-instances: 20
+    secrets: inherit
 
   # ==========================================
   # STAGE 5: NOTIFY
