@@ -94,7 +94,7 @@ jobs:
 
   deploy-prod:
     needs: [build-and-push, database-migration]
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    if: github.ref == 'refs/heads/main'
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-cloud-run-deploy.yml@feature/gcp-cloud-run
     with:
       service-name: 'singpost-app-tracking-prod'
