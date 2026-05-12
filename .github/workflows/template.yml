@@ -1,34 +1,25 @@
-name: Standard CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - dev
-      - 'feature/**'
+    branches: [dev, main, 'feature/**']
   pull_request:
-    branches:
-      - main
-      - dev
-      - 'feature/**'
+    branches: [dev, main]
 
 permissions:
   contents: read
   security-events: write
   actions: read
-  id-token: write
   packages: write
 
 jobs:
-  # ==========================================
-  # PARALLEL STAGE 1: FAST CHECKS
-  # ==========================================
+  # ── Stage 1: Parallel fast checks ────────────────────────────────────
   gitleaks-scan:
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
-      scan_mode: full
+      scan_mode: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
       config-ref: dev
-      fail-on-detection: false
+      fail-on-detection: true
     secrets: inherit
 
   app-ci-test:
@@ -39,13 +30,10 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-      - run: |
-          npm install || true
-          npm test --if-present
+      - run: npm ci
+      - run: npm test
 
-  # ==========================================
-  # STAGE 2: SECURITY SCANS
-  # ==========================================
+  # ── Stage 2: CodeQL (needs Stage 1) ──────────────────────────────────
   codeql-scan:
     needs: [gitleaks-scan, app-ci-test]
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@dev
@@ -54,48 +42,12 @@ jobs:
       build-mode: 'none'
       queries: 'security-extended'
 
-  # ==========================================
-  # STAGE 3: DOCKER BUILD
-  # ==========================================
-  build-and-push:
+  # ── Stage 3: Docker build → GHCR (needs Stage 2) ─────────────────────
+  docker-build:
     needs: codeql-scan
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-docker-build.yml@dev
     with:
-      image-name: 'singpost-app-tracking'
-      dockerfile: 'Dockerfile'
-      context: '.'
-      push: true
+      image-name: singpost-app-tracking
+      environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+      push: ${{ github.event_name == 'push' }}
     secrets: inherit
-
-  database-migration:
-    needs: codeql-scan
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Flyway migration"
-
-  # ==========================================
-  # STAGE 4: DEPLOYMENTS
-  # ==========================================
-  deploy-dev:
-    needs: [build-and-push, database-migration]
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Cloud Deploy GKE DEV"
-
-  deploy-prod:
-    needs: [build-and-push, database-migration]
-    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking Cloud Deploy GKE PROD"
-
-  # ==========================================
-  # STAGE 5: NOTIFY
-  # ==========================================
-  notify:
-    if: always()
-    needs: [deploy-dev, deploy-prod]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Mocking GChat Webhook"
