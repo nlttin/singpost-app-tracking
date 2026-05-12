@@ -1,0 +1,53 @@
+name: CD Pipeline - Cloud Build & Cloud Run
+
+on:
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # ── Stage 1: Secret scan ──────────────────────────────────────────────
+  gitleaks-scan:
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
+    with:
+      scan_mode: full
+      config-ref: dev
+      fail-on-detection: true
+    secrets: inherit
+
+  # ── Stage 2: Cloud Build → GAR + Cloud Run deploy ─────────────────────
+  deploy-dev:
+    needs: gitleaks-scan
+    if: github.ref == 'refs/heads/dev'
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-cloud-run-deploy.yml@feature/gcp-cloud-run
+    with:
+      service-name: singpost-app-tracking-dev
+      image-name: singpost-app-tracking
+      project-id: ${{ vars.GCP_PROJECT_ID }}
+      region: asia-southeast1
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      deployer-sa: ${{ secrets.GCP_DEPLOYER_SA }}
+      runtime-sa: ${{ secrets.GCP_RUNTIME_SA }}
+      min-instances: 0
+      max-instances: 10
+    secrets: inherit
+
+  deploy-prod:
+    needs: gitleaks-scan
+    if: github.ref == 'refs/heads/main'
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-cloud-run-deploy.yml@feature/gcp-cloud-run
+    with:
+      service-name: singpost-app-tracking-prod
+      image-name: singpost-app-tracking
+      project-id: ${{ vars.GCP_PROJECT_ID }}
+      region: asia-southeast1
+      wif-provider: ${{ secrets.WIF_PROVIDER }}
+      deployer-sa: ${{ secrets.GCP_DEPLOYER_SA }}
+      runtime-sa: ${{ secrets.GCP_RUNTIME_SA }}
+      min-instances: 1
+      max-instances: 20
+    secrets: inherit
