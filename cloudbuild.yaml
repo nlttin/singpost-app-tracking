@@ -1,19 +1,23 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: bash
     args:
-      - build
-      - '-t'
-      - '$_IMAGE:$SHORT_SHA'
-      - '-t'
-      - '$_IMAGE:latest'
-      - '.'
+      - -c
+      - |
+        echo $$GITHUB_PAT | docker login ghcr.io -u nlttin --password-stdin
+        docker build \
+          -t ghcr.io/nlttin/singpost-app-tracking:$SHORT_SHA \
+          -t ghcr.io/nlttin/singpost-app-tracking:latest \
+          .
+        docker push ghcr.io/nlttin/singpost-app-tracking:$SHORT_SHA
+        docker push ghcr.io/nlttin/singpost-app-tracking:latest
+    secretEnv:
+      - GITHUB_PAT
 
-images:
-  - '$_IMAGE:$SHORT_SHA'
-  - '$_IMAGE:latest'
-
-substitutions:
-  _IMAGE: asia-southeast1-docker.pkg.dev/project-a8a37a94-04a7-44bf-a2c/sp-logistic-dev-app/singpost-app-tracking
+availableSecrets:
+  secretManager:
+    - versionName: projects/project-a8a37a94-04a7-44bf-a2c/secrets/github-pat/versions/latest
+      env: GITHUB_PAT
 
 options:
   logging: CLOUD_LOGGING_ONLY
