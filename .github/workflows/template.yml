@@ -11,6 +11,7 @@ permissions:
   security-events: write
   actions: read
   packages: write
+  id-token: write
 
 jobs:
   # ── Stage 1: Parallel fast checks ────────────────────────────────────
@@ -51,3 +52,31 @@ jobs:
       environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
       push: ${{ github.event_name == 'push' }}
     secrets: inherit
+
+  # ── Stage 4: Deploy to Cloud Run (dev branch only) ───────────────────
+  deploy-dev:
+    needs: docker-build
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: development
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/singpost-app-tracking:${{ github.sha }}
+      CLOUD_RUN_SERVICE: sp-logistic-dev-cloudrun-app
+      REGION: asia-southeast1
+    steps:
+      - name: Authenticate to GCP via WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE }} \
+            --image ${{ env.IMAGE }} \
+            --region ${{ env.REGION }} \
+            --project ${{ secrets.GCP_PROJECT }} \
+            --quiet
