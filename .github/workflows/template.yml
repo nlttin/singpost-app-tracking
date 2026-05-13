@@ -62,11 +62,27 @@ jobs:
 
       - name: Submit to Cloud Build
         run: |
-          gcloud builds submit \
+          BUILD_ID=$(gcloud builds submit \
             --project=${{ secrets.GCP_PROJECT }} \
             --config=cloudbuild.yaml \
             --substitutions=SHORT_SHA=${{ github.sha }} \
-            .
+            --async \
+            --format='value(id)' \
+            .)
+          echo "Build ID: $BUILD_ID"
+          while true; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" \
+              --project=${{ secrets.GCP_PROJECT }} \
+              --format='value(status)')
+            echo "Build status: $STATUS"
+            case "$STATUS" in
+              SUCCESS) echo "Build succeeded!"; break ;;
+              FAILURE|CANCELLED|TIMEOUT|INTERNAL_ERROR)
+                echo "Build failed with status: $STATUS"
+                exit 1 ;;
+            esac
+            sleep 15
+          done
 
   # ── Stage 4: Deploy to Cloud Run (dev branch only) ───────────────────
   deploy-dev:

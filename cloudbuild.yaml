@@ -20,4 +20,4 @@ availableSecrets:
       env: GITHUB_PAT
 
 options:
-  logging: LEGACY
+  logging: CLOUD_LOGGING_ONLY
