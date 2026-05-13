@@ -1,0 +1,19 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - '$_IMAGE:$SHORT_SHA'
+      - '-t'
+      - '$_IMAGE:latest'
+      - '.'
+
+images:
+  - '$_IMAGE:$SHORT_SHA'
+  - '$_IMAGE:latest'
+
+substitutions:
+  _IMAGE: asia-southeast1-docker.pkg.dev/project-a8a37a94-04a7-44bf-a2c/sp-logistic-dev-app/singpost-app-tracking
+
+options:
+  logging: CLOUD_LOGGING_ONLY

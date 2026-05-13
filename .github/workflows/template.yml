@@ -43,24 +43,42 @@ jobs:
       build-mode: 'none'
       queries: 'security-extended'
 
-  # ── Stage 3: Docker build → GHCR (needs Stage 2) ─────────────────────
-  docker-build:
+  # ── Stage 3: Cloud Build → GAR (needs Stage 2, push only) ──────────────
+  cloud-build:
     needs: codeql-scan
-    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-docker-build.yml@dev
-    with:
-      image-name: singpost-app-tracking
-      environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
-      push: ${{ github.event_name == 'push' }}
-    secrets: inherit
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      REGION: asia-southeast1
+      GAR_IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app/singpost-app-tracking
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via WIF
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA_EMAIL }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Submit to Cloud Build
+        run: |
+          gcloud builds submit \
+            --project=${{ secrets.GCP_PROJECT }} \
+            --config=cloudbuild.yaml \
+            --substitutions=SHORT_SHA=${{ github.sha }},_IMAGE=${{ env.GAR_IMAGE }} \
+            .
 
   # ── Stage 4: Deploy to Cloud Run (dev branch only) ───────────────────
   deploy-dev:
-    needs: docker-build
+    needs: cloud-build
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: development
     env:
-      IMAGE: ghcr.io/${{ github.repository_owner }}/singpost-app-tracking:${{ github.sha }}
+      IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app/singpost-app-tracking:${{ github.sha }}
       CLOUD_RUN_SERVICE: sp-logistic-dev-cloudrun-app
       REGION: asia-southeast1
     steps:
