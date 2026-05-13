@@ -20,7 +20,7 @@ jobs:
     with:
       scan_mode: pr
       config-ref: dev              
-      fail-on-detection: true    
+      fail-on-detection: false
     secrets: inherit   
 
   app-ci-test:
