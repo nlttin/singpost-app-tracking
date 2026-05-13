@@ -43,7 +43,7 @@ jobs:
       build-mode: 'none'
       queries: 'security-extended'
 
-  # ── Stage 3: Cloud Build → GHCR (needs Stage 2, push only) ─────────────
+  # ── Stage 3: Cloud Build → GAR (needs Stage 2, push only) ──────────────
   cloud-build:
     needs: codeql-scan
     if: github.event_name == 'push'
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     env:
-      IMAGE: ghcr.io/${{ github.repository_owner }}/singpost-app-tracking:${{ github.sha }}
+      IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app/singpost-app-tracking:${{ github.sha }}
       CLOUD_RUN_SERVICE: sp-logistic-dev-cloudrun-app
       REGION: asia-southeast1
     steps:
@@ -110,4 +110,6 @@ jobs:
             --image ${{ env.IMAGE }} \
             --region ${{ env.REGION }} \
             --project ${{ secrets.GCP_PROJECT }} \
+            --port 3000 \
             --quiet
+
