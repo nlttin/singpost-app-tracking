@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     env:
-      IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app/singpost-app-tracking:${{ github.sha }}
+      IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app-ghcr-proxy/nlttin/singpost-app-tracking:${{ github.sha }}
       CLOUD_RUN_SERVICE: sp-logistic-dev-cloudrun-app
       REGION: asia-southeast1
     steps:
