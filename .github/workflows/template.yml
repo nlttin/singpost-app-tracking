@@ -18,10 +18,10 @@ jobs:
   gitleaks-scan:
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
-      scan_mode: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
-      config-ref: dev
-      fail-on-detection: true
-    secrets: inherit
+      scan_mode: pr
+      config-ref: dev              
+      fail-on-detection: true    
+    secrets: inherit   
 
   app-ci-test:
     runs-on: ubuntu-latest
