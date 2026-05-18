@@ -22,4 +22,4 @@ availableSecrets:
 options:
   logging: CLOUD_LOGGING_ONLY
 
-serviceAccount: 'projects/project-a8a37a94-04a7-44bf-a2c/serviceAccounts/build-sa@project-a8a37a94-04a7-44bf-a2c.iam.gserviceaccount.com'
+serviceAccount: 'projects/project-a8a37a94-04a7-44bf-a2c/serviceAccounts/dev-app-tracking-build-sa@project-a8a37a94-04a7-44bf-a2c.iam.gserviceaccount.com'
