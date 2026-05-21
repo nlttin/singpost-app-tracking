@@ -78,7 +78,7 @@ export default [
       "coverage/**",
       "dist/**",
       "build/**",
-      "src/tracker.js",
+      //"src/tracker.js",
     ],
   },
 ];
