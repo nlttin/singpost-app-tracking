@@ -19,97 +19,51 @@ jobs:
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-gitleaks.yml@dev
     with:
       scan_mode: pr
-      config-ref: dev              
+      config-ref: dev
       fail-on-detection: false
-    secrets: inherit   
+    secrets: inherit
 
-  app-ci-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm test
+  eslint-scan:
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-eslint.yml@dev
+    with:
+      node_version: '20'
+      config_file: 'eslint.config.mjs'
+      file_patterns: 'src'
+      fail_on_error: false
+    secrets: inherit
+
+  vitest:
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-vitest.yml@dev
+    with:
+      node_version: '20'
+      test_command: 'npx vitest run --coverage'
+      fail_on_error: true
+    secrets: inherit
 
   # ── Stage 2: CodeQL (needs Stage 1) ──────────────────────────────────
   codeql-scan:
-    needs: [gitleaks-scan, app-ci-test]
+    needs: [gitleaks-scan, eslint-scan, vitest]
     uses: nlttin/singpost-cicd-components/.github/workflows/reusable-workflow-codeql.yml@dev
     with:
       language: 'javascript-typescript'
       build-mode: 'none'
       queries: 'security-extended'
 
-  # ── Stage 3: Cloud Build → GAR (needs Stage 2, push only) ──────────────
-  cloud-build:
+  # ── Stage 3: Docker build → GHCR (needs Stage 2) ─────────────────────
+  build-and-push:
     needs: codeql-scan
-    if: github.event_name == 'push'
+    uses: nlttin/singpost-cicd-components/.github/workflows/reusable-docker-build.yml@dev
+    with:
+      image-name: 'singpost-app-tracking'
+      dockerfile: 'Dockerfile'
+      context: '.'
+      push: ${{ github.ref_name == 'dev' || github.ref_name == 'main' }}
+    secrets: inherit
+
+  # ── Stage 4: Notify ──────────────────────────────────────────────────
+  notify:
+    if: always()
+    needs: [build-and-push]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Authenticate to GCP via WIF
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_EMAIL }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Submit to Cloud Build
-        run: |
-          BUILD_ID=$(gcloud builds submit \
-            --project=${{ secrets.GCP_PROJECT }} \
-            --config=cloudbuild.yaml \
-            --substitutions=SHORT_SHA=${{ github.sha }} \
-            --async \
-            --format='value(id)' \
-            .)
-          echo "Build ID: $BUILD_ID"
-          while true; do
-            STATUS=$(gcloud builds describe "$BUILD_ID" \
-              --project=${{ secrets.GCP_PROJECT }} \
-              --format='value(status)')
-            echo "Build status: $STATUS"
-            case "$STATUS" in
-              SUCCESS) echo "Build succeeded!"; break ;;
-              FAILURE|CANCELLED|TIMEOUT|INTERNAL_ERROR)
-                echo "Build failed with status: $STATUS"
-                exit 1 ;;
-            esac
-            sleep 15
-          done
-
-  # ── Stage 4: Deploy to Cloud Run (dev branch only) ───────────────────
-  deploy-dev:
-    needs: cloud-build
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    environment: development
-    env:
-      IMAGE: asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/sp-logistic-dev-app-ghcr-proxy/nlttin/singpost-app-tracking:${{ github.sha }}
-      CLOUD_RUN_SERVICE: sp-logistic-dev-cloudrun-app
-      REGION: asia-southeast1
-    steps:
-      - name: Authenticate to GCP via WIF
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SA_EMAIL }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy ${{ env.CLOUD_RUN_SERVICE }} \
-            --image ${{ env.IMAGE }} \
-            --region ${{ env.REGION }} \
-            --project ${{ secrets.GCP_PROJECT }} \
-            --port 3000 \
-            --quiet
-
+      - run: echo "Mocking GChat Webhook"
