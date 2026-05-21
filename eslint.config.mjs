@@ -1,6 +1,4 @@
 import js from "@eslint/js";
-import importX from "eslint-plugin-import-x";
-import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
 
 export default [
@@ -17,10 +15,6 @@ export default [
         ...globals.es2022,
       },
     },
-    plugins: {
-      "import-x": importX,
-      "unused-imports": unusedImports,
-    },
     rules: {
       "indent": ["warn", 2, { "SwitchCase": 1 }],
       "quotes": ["warn", "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
@@ -34,18 +28,15 @@ export default [
       "space-before-blocks": "warn",
       "space-infix-ops": "warn",
 
-      "import-x/order": ["warn", {
-        groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
-        "newlines-between": "always",
-        alphabetize: { order: "asc", caseInsensitive: true },
+      "no-duplicate-imports": "error",
+      "sort-imports": ["warn", {
+        ignoreCase: true,
+        ignoreDeclarationSort: false,
+        ignoreMemberSort: false,
+        memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
       }],
-      "import-x/no-duplicates": "error",
-      "import-x/no-unresolved": "off",
-      "import-x/newline-after-import": "warn",
 
-      "no-unused-vars": "off",
-      "unused-imports/no-unused-imports": "error",
-      "unused-imports/no-unused-vars": ["warn", {
+      "no-unused-vars": ["warn", {
         vars: "all",
         varsIgnorePattern: "^_",
         args: "after-used",
@@ -72,17 +63,12 @@ export default [
         ...globals.node,
       },
     },
-    plugins: {
-      "import-x": importX,
-      "unused-imports": unusedImports,
-    },
     rules: {
       "indent": ["warn", 2],
       "quotes": ["warn", "double", { avoidEscape: true }],
       "semi": ["warn", "always"],
       "eol-last": ["warn", "always"],
-      "import-x/no-duplicates": "error",
-      "unused-imports/no-unused-imports": "error",
+      "no-duplicate-imports": "error",
     },
   },
 
